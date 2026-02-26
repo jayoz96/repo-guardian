@@ -153,7 +153,7 @@ let escaped = code
 
 ---
 
-## 加分项一：CLAUDE.md 工程规范的价值
+## 八、工程规范：CLAUDE.md 的价值
 
 项目根目录的 `CLAUDE.md` 是 Claude Code 的持久化指令文件，相当于给 AI 一份「项目开发手册」。本项目的 CLAUDE.md 包含：
 
@@ -168,7 +168,7 @@ let escaped = code
 
 ---
 
-## 加分项二：协作分工 — Agent Teams 多智能体协作
+## 九、协作分工：Agent Teams 多智能体协作
 
 ### 开启方式
 
@@ -228,7 +228,7 @@ Agent 2（后端工程师）：修改 ai-agent.ts
 
 ---
 
-## 加分项三：Plan Mode — 先设计后编码
+## 十、Plan Mode：先设计后编码
 
 在实现 API 端点描述增强功能时，Claude Code 使用了 Plan Mode（规划模式）：
 
