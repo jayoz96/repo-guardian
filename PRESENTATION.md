@@ -168,9 +168,45 @@ let escaped = code
 
 ---
 
-## 加分项二：协作分工 — Task Agent 并行协作
+## 加分项二：协作分工 — Agent Teams 多智能体协作
 
-Claude Code 支持通过 Task Agent 将任务分发给多个子代理并行执行。本项目中多次使用了这一能力：
+### 开启方式
+
+Claude Code 的多智能体团队协作是实验性功能，需要在启动前设置环境变量：
+
+```powershell
+# PowerShell（Windows）
+$env:CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"
+claude
+
+# Bash（macOS / Linux）
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude
+```
+
+开启后，Claude Code 主进程可以作为 **Team Lead**，将任务拆分并分发给多个 **Task Agent**（子代理），每个 Agent 拥有独立的上下文窗口和工具权限，互不干扰地并行工作。
+
+### 协作架构
+
+```
+┌─────────────────────────────────────────────┐
+│           Claude Code 主进程（Team Lead）       │
+│                                             │
+│  1. 接收用户需求                              │
+│  2. 分析任务依赖关系                           │
+│  3. 拆分为独立子任务                           │
+│  4. 分发给 Task Agent 并行执行                 │
+│  5. 收集结果，统一验收（tsc 编译 + 重启）        │
+└──────────┬──────────────┬───────────────────┘
+           │              │
+     ┌─────▼─────┐  ┌─────▼─────┐
+     │  Agent 1  │  │  Agent 2  │
+     │ 前端工程师  │  │ 后端工程师  │
+     │           │  │           │
+     │ 读取文件   │  │ 读取文件   │
+     │ 编辑代码   │  │ 编辑代码   │
+     │ 独立上下文  │  │ 独立上下文  │
+     └───────────┘  └───────────┘
+```
 
 ### 案例：DiffViewer 放大 + 跨文件去重并行处理
 
