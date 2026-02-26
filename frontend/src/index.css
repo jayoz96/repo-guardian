@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #151d2e;
+  --color-dark-bg-secondary: #1c2640;
+  --color-dark-bg-tertiary: #283650;
+  --color-dark-border: #334766;
+  --color-dark-text: #f0f4fa;
+  --color-dark-text-secondary: #b4c5dc;
+  --color-dark-text-muted: #7b91ad;
+  --color-accent-blue: #5b9aff;
+  --color-accent-cyan: #36e4b0;
+  --color-accent-teal: #20c9a0;
+  --color-score-green: #3ee8a5;
+  --color-score-yellow: #fcc737;
+  --color-score-red: #ff7a7a;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(145deg, var(--color-dark-bg) 0%, #182236 50%, #1a2740 100%);
+  background-attachment: fixed;
+  color: var(--color-dark-text);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Diff 语法高亮 */
+.diff-keyword { color: #c084fc; }
+.diff-builtin { color: #f97316; }
+.diff-string { color: #22d3ee; }
+.diff-comment { color: #64748b; }
