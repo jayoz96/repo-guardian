@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import {
   FolderTree, FileCode2, Layers, Hammer, Hash, FileText,
-  Globe, Database, ChevronDown, ChevronRight, Boxes, X, Search,
+  Globe, Database, ChevronDown, ChevronRight, Boxes, X, Search, GitBranch,
 } from 'lucide-react';
+import { DependencyGraph } from './DependencyGraph';
 import type { ProjectOverview as OverviewType } from '../../types/analysis';
 
 interface Props {
@@ -57,6 +58,7 @@ export function ProjectOverview({ overview }: Props) {
   const [selectedTable, setSelectedTable] = useState<TableInfo | null>(null);
   const [apiSearch, setApiSearch] = useState('');
   const [tableSearch, setTableSearch] = useState('');
+  const [showDepGraph, setShowDepGraph] = useState(false);
 
   const filteredApis = useMemo(() => {
     if (!apiSearch) return overview.apis;
@@ -84,6 +86,10 @@ export function ProjectOverview({ overview }: Props) {
         <Layers className="w-4 h-4 text-accent-cyan" />
         项目概览
       </h2>
+
+      {overview.description && (
+        <p className="text-sm text-dark-text-secondary leading-relaxed">{overview.description}</p>
+      )}
 
       {/* 基本信息 + 技术栈 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -265,9 +271,25 @@ export function ProjectOverview({ overview }: Props) {
         </div>
       )}
 
+      {/* 架构依赖图按钮 */}
+      {overview.dependencyGraph && (
+        <button
+          onClick={() => setShowDepGraph(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/30 text-blue-400 text-sm hover:bg-blue-500/10 transition-colors"
+        >
+          <GitBranch className="w-3.5 h-3.5" />
+          架构依赖图
+        </button>
+      )}
+
       {/* 表字段弹窗 */}
       {selectedTable && (
         <TableFieldModal table={selectedTable} onClose={() => setSelectedTable(null)} />
+      )}
+
+      {/* 依赖图弹窗 */}
+      {showDepGraph && overview.dependencyGraph && (
+        <DependencyGraph graph={overview.dependencyGraph} onClose={() => setShowDepGraph(false)} />
       )}
     </div>
   );

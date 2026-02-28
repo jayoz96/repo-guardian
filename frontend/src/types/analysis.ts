@@ -21,7 +21,13 @@ export interface DimensionResult {
   issues: Issue[];
 }
 
+export type DepNodeType = 'controller' | 'service' | 'mapper' | 'table';
+export interface DepNode { id: string; type: DepNodeType; }
+export interface DepEdge { source: string; target: string; }
+export interface DependencyGraph { nodes: DepNode[]; edges: DepEdge[]; }
+
 export interface ProjectOverview {
+  description?: string;
   name: string;
   language: string;
   buildTool: string;
@@ -33,6 +39,7 @@ export interface ProjectOverview {
   dbTables: { name: string; comment: string; fields: { name: string; type: string; comment: string }[] }[];
   dependencies: { name: string; version: string }[];
   frameworks: string[];
+  dependencyGraph?: DependencyGraph;
 }
 
 export interface AnalysisResult {

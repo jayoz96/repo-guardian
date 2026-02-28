@@ -38,8 +38,11 @@ repo-guardian/
 │   │   │   │   ├── AiSummary.tsx      # AI 体检总结
 │   │   │   │   ├── Skeleton.tsx       # 骨架屏组件族
 │   │   │   │   ├── ScoreCard.tsx      # 评分卡片
+│   │   │   │   ├── IssueHeatmap.tsx  # 问题热力图（SVG treemap）
 │   │   │   │   └── Header.tsx         # 顶部导航
-│   │   │   └── charts/       # 图表组件 (雷达图等)
+│   │   │   └── charts/       # 图表组件
+│   │   │       ├── RadarChart.tsx    # 五维雷达图
+│   │   │       └── TrendChart.tsx    # 趋势折线图
 │   │   ├── hooks/
 │   │   ├── lib/
 │   │   ├── types/
@@ -108,7 +111,7 @@ Repo-Guardian 的核心交互围绕"一键体检"展开：用户输入 GitHub �
 **阶段 1：输入与触发**
 - 支持 GitHub 仓库 URL 和本地绝对路径两种输入
 - 输入框预填示例地址，降低使用门槛
-- 扫描历史下拉菜单（localStorage 持久化，最近 5 条记录）
+- 扫描历史下拉菜单（localStorage 持久化，最近 20 条记录）
 
 **阶段 2：动态反馈**
 - 骨架屏（Skeleton）替代传统 Loading 转圈，保持页面结构感
@@ -148,6 +151,8 @@ Repo-Guardian 的核心交互围绕"一键体检"展开：用户输入 GitHub �
 | `DiffViewer` | 左右对比 Diff 弹窗 |
 | `AiSummary` | AI 体检总结面板 |
 | `Skeleton` | 骨架屏组件族（雷达/卡片/列表/总结） |
+| `TrendChart` | 趋势折线图（6 条线：5 维度 + 均分） |
+| `IssueHeatmap` | 目录级问题热力图（SVG treemap + 下钻） |
 
 ### 容错与降级策略
 - GitHub 克隆失败 → 返回 Spoon-Knife 演示数据

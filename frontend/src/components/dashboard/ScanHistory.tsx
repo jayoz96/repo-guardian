@@ -5,10 +5,17 @@ export interface ScanRecord {
   path: string;
   time: string;
   avgScore: number;
+  scores?: {
+    security: number;
+    quality: number;
+    complexity: number;
+    maintainability: number;
+    standards: number;
+  };
 }
 
 const STORAGE_KEY = 'repo-guardian-history';
-const MAX_RECORDS = 5;
+const MAX_RECORDS = 20;
 
 export function loadHistory(): ScanRecord[] {
   try {

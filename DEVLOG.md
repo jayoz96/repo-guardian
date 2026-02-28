@@ -124,10 +124,21 @@
 
 ---
 
+## Phase 11: 趋势追踪 + 问题热力图 + 项目概述
+
+- [x] `ScanHistory.tsx` — ScanRecord 扩展五维分数，历史上限提升至 20 条
+- [x] `TrendChart.tsx` — recharts 折线图，6 条线（5 维度 + 均分虚线）
+- [x] `IssueHeatmap.tsx` — 纯 SVG squarified treemap，目录级聚合 + 下钻交互
+- [x] `Dashboard.tsx` — 集成趋势图 + 热力图/列表视图切换
+- [x] `ProjectOverview` — 新增 description 字段，自动生成项目概述文字
+- [x] `ai-agent.ts` — AI 体检总结末尾新增五维评分标准说明
+
+---
+
 ## 待规划功能
 
 - [ ] 分析报告导出（PDF / HTML）
-- [ ] 历史趋势图（折线图展示分数变化）
+- [x] ~~历史趋势图（折线图展示分数变化）~~ ✅ Phase 11 已完成
 - [ ] 自定义规则阈值配置
 - [ ] 多项目横向对比
 - [ ] CI/CD 集成（GitHub Actions）

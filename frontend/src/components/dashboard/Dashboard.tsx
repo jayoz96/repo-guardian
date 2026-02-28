@@ -15,7 +15,10 @@ import { AiSummary } from './AiSummary';
 import { Toast } from './Toast';
 import { ProjectOverview } from './ProjectOverview';
 import { RadarSkeleton, ScoreCardsSkeleton, SummarySkeleton, IssueListSkeleton } from './Skeleton';
-import { ScanHistory, saveToHistory } from './ScanHistory';
+import { ScanHistory, saveToHistory, loadHistory } from './ScanHistory';
+import type { ScanRecord } from './ScanHistory';
+import { TrendChart } from '../charts/TrendChart';
+import { IssueHeatmap } from './IssueHeatmap';
 import type { AnalysisResult, Dimension, Issue } from '../../types/analysis';
 
 const DIMENSION_CONFIG: {
@@ -53,6 +56,8 @@ export function Dashboard() {
   const [error, setError] = useState('');
   const [fixingFile, setFixingFile] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [history, setHistory] = useState<ScanRecord[]>(loadHistory);
+  const [issueView, setIssueView] = useState<'list' | 'heatmap'>('list');
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const lastPathRef = useRef('');
 
@@ -87,7 +92,19 @@ export function Dashboard() {
       // 保存扫描历史
       const dims = [result.security, result.quality, result.complexity, result.maintainability, result.standards];
       const avg = Math.round(dims.reduce((s, d) => s + d.score, 0) / dims.length);
-      saveToHistory({ path, time: new Date().toLocaleString('zh-CN'), avgScore: avg });
+      saveToHistory({
+        path,
+        time: new Date().toLocaleString('zh-CN'),
+        avgScore: avg,
+        scores: {
+          security: result.security.score,
+          quality: result.quality.score,
+          complexity: result.complexity.score,
+          maintainability: result.maintainability.score,
+          standards: result.standards.score,
+        },
+      });
+      setHistory(loadHistory());
       lastPathRef.current = path;
     } catch (err) {
       setError(err instanceof Error ? err.message : '分析失败');
@@ -190,6 +207,9 @@ export function Dashboard() {
           </div>
         )}
 
+        {/* 趋势追踪 */}
+        {!scanning && <TrendChart history={history} />}
+
         {/* 项目概览 */}
         {analysisData?.overview && (
           <ProjectOverview overview={analysisData.overview} />
@@ -207,11 +227,31 @@ export function Dashboard() {
           <IssueListSkeleton />
         ) : (
           <div className="rounded-xl bg-dark-bg-secondary border border-dark-border p-6">
-            <h2 className="text-base font-medium text-dark-text-secondary mb-3">
-              问题列表
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-medium text-dark-text-secondary">
+                问题列表
+              </h2>
+              {issueGroups.length > 0 && (
+                <div className="flex gap-1 bg-dark-bg-tertiary rounded-lg p-0.5">
+                  <button
+                    onClick={() => setIssueView('list')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${issueView === 'list' ? 'bg-dark-bg-secondary text-dark-text' : 'text-dark-text-muted hover:text-dark-text'}`}
+                  >
+                    列表
+                  </button>
+                  <button
+                    onClick={() => setIssueView('heatmap')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${issueView === 'heatmap' ? 'bg-dark-bg-secondary text-dark-text' : 'text-dark-text-muted hover:text-dark-text'}`}
+                  >
+                    热力图
+                  </button>
+                </div>
+              )}
+            </div>
             {issueGroups.length > 0 ? (
-              <IssueList issues={issueGroups} onFix={handleFix} fixingFile={fixingFile} />
+              issueView === 'list'
+                ? <IssueList issues={issueGroups} onFix={handleFix} fixingFile={fixingFile} />
+                : <IssueHeatmap issues={issueGroups} />
             ) : (
               <p className="text-dark-text-muted text-sm">
                 点击"开始扫描"以分析代码库健康状况

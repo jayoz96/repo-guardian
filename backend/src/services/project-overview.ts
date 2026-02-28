@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import type { Dirent } from 'node:fs';
 import { join, extname, basename } from 'node:path';
-import type { ProjectOverview } from '../types/analysis.js';
+import type { ProjectOverview, DependencyGraph, DepNode, DepEdge } from '../types/analysis.js';
 
 const SKIP_DIRS = new Set([
   'node_modules', '.git', 'dist', 'build', 'vendor', '__pycache__',
@@ -788,6 +788,78 @@ async function parseDependencies(
   return { deps: deps.slice(0, 40), frameworks: [...new Set(frameworks)] };
 }
 
+/** 构建 Controller→Service→Mapper→Table 四层依赖图 */
+function buildDependencyGraph(
+  files: FileInfo[],
+  classInjections: Map<string, string[]>,
+  mapperToTables: Map<string, string[]>,
+  classToTable: Map<string, string[]>,
+  interfaceImplMap: Map<string, string[]>,
+): DependencyGraph | undefined {
+  const nodeMap = new Map<string, DepNode>();
+  const edges: DepEdge[] = [];
+  const edgeSet = new Set<string>();
+
+  // Classify Java classes by annotation/naming
+  const classCategory = new Map<string, 'controller' | 'service' | 'mapper'>();
+  for (const f of files) {
+    if (!f.content || f.ext !== '.java') continue;
+    const cm = f.content.match(/(?:public|protected|private|abstract|final)\s+(?:(?:abstract|final|static)\s+)*(?:class|interface)\s+(\w+)/);
+    if (!cm) continue;
+    const name = cm[1];
+    if (/@(?:RestController|Controller)\b/.test(f.content)) classCategory.set(name, 'controller');
+    else if (/Service|Facade|Manager/.test(name)) classCategory.set(name, 'service');
+    else if (/Mapper|Repository|Dao/.test(name)) classCategory.set(name, 'mapper');
+  }
+
+  function addNode(id: string, type: DepNode['type']) {
+    if (!nodeMap.has(id)) nodeMap.set(id, { id, type });
+  }
+  function addEdge(s: string, t: string) {
+    const key = `${s}->${t}`;
+    if (!edgeSet.has(key)) { edgeSet.add(key); edges.push({ source: s, target: t }); }
+  }
+
+  // Add nodes and edges from classInjections
+  for (const [cls, deps] of classInjections) {
+    const srcType = classCategory.get(cls);
+    if (!srcType) continue;
+    addNode(cls, srcType);
+    for (let dep of deps) {
+      // Resolve interface → impl
+      const impls = interfaceImplMap.get(dep);
+      const resolved = impls?.[0] ?? dep;
+      const depType = classCategory.get(resolved) ?? classCategory.get(dep);
+      if (!depType) continue;
+      addNode(resolved, depType);
+      addEdge(cls, resolved);
+    }
+  }
+
+  // Mapper → Table edges
+  for (const [mapper, tables] of mapperToTables) {
+    if (!classCategory.has(mapper) && !nodeMap.has(mapper)) continue;
+    addNode(mapper, 'mapper');
+    for (const t of tables) {
+      addNode(t, 'table');
+      addEdge(mapper, t);
+    }
+  }
+
+  // Also from classToTable for mappers
+  for (const [cls, tables] of classToTable) {
+    if (classCategory.get(cls) === 'mapper' || nodeMap.get(cls)?.type === 'mapper') {
+      for (const t of tables) {
+        addNode(t, 'table');
+        addEdge(cls, t);
+      }
+    }
+  }
+
+  const nodes = [...nodeMap.values()];
+  return nodes.length > 0 ? { nodes, edges } : undefined;
+}
+
 export async function collectOverview(projectPath: string): Promise<ProjectOverview> {
   const dirName = basename(projectPath);
 
@@ -828,11 +900,25 @@ export async function collectOverview(projectPath: string): Promise<ProjectOverv
   const apis = scanApis(fileStats, projectPath, classInjects, mapperToTables, classToTable, interfaceImplMap);
   const dbTables = scanDbTables(fileStats);
   const { deps, frameworks } = await parseDependencies(projectPath, topFiles, fileStats);
+  const dependencyGraph = buildDependencyGraph(fileStats, classInjects, mapperToTables, classToTable, interfaceImplMap);
+
+  const lang = detectLanguage(fileBreakdown);
+  const build = detectBuildTool(topFiles, fileStats);
+  const parts = [
+    `${dirName} 是一个基于 ${lang} 的项目`,
+    build !== '未识别' ? `，使用 ${build} 构建` : '',
+    frameworks.length > 0 ? `，技术栈包含 ${frameworks.join('、')}` : '',
+    `。项目共有 ${fileStats.length} 个代码文件、约 ${totalLines.toLocaleString()} 行代码`,
+    apis.length > 0 ? `，提供 ${apis.length} 个 API 端点` : '',
+    dbTables.length > 0 ? `，涉及 ${dbTables.length} 张数据库表` : '',
+    '。',
+  ];
 
   return {
+    description: parts.join(''),
     name: dirName,
-    language: detectLanguage(fileBreakdown),
-    buildTool: detectBuildTool(topFiles, fileStats),
+    language: lang,
+    buildTool: build,
     totalFiles: fileStats.length,
     totalLines,
     fileBreakdown,
@@ -841,5 +927,6 @@ export async function collectOverview(projectPath: string): Promise<ProjectOverv
     dbTables,
     dependencies: deps,
     frameworks,
+    dependencyGraph,
   };
 }

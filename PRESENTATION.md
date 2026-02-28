@@ -237,17 +237,19 @@ Agent 2（后端工程师）：修改 ai-agent.ts
 3. **用户审批**：用户确认方案后才进入编码阶段
 4. **按计划执行**：严格按照设计文档逐步实现
 
-规划文档示例（节选）：
+规划文档示例（节选 — Phase 11 趋势追踪 + 问题热力图）：
 
 ```markdown
 ## 改动范围（4 个文件）
-| 文件 | 改动 |
+| 文件 | 操作 |
 |------|------|
-| backend/src/types/analysis.ts  | API 类型加 tables?: string[] |
-| frontend/src/types/analysis.ts | 同步加 tables?: string[] |
-| backend/src/services/project-overview.ts | 新增依赖图构建 |
-| frontend/src/.../ProjectOverview.tsx | 展示关联表标签 |
+| ScanHistory.tsx | 修改 — 扩展 ScanRecord + 上限提升至 20 |
+| Dashboard.tsx   | 修改 — 保存五维分数 + 集成两个新组件 |
+| TrendChart.tsx  | **新建** — recharts 折线趋势图 |
+| IssueHeatmap.tsx| **新建** — 纯 SVG treemap 热力图 |
 ```
+
+Plan Mode 的价值在 Phase 11 中尤为明显：趋势图需要扩展 ScanRecord 类型（影响 localStorage 兼容性），热力图需要实现 squarified treemap 算法（纯函数 ~40 行），两者都涉及 Dashboard 状态管理改动。先在规划文档中明确数据流和组件接口，用户审批后再编码，避免了前后端类型不同步的返工。
 
 **实际效果**：避免了「写到一半发现方向错了」的返工，特别是涉及前后端类型同步的跨层修改，先对齐方案再动手效率更高。
 
@@ -258,12 +260,12 @@ Agent 2（后端工程师）：修改 ai-agent.ts
 | 领域 | 核心案例 | Claude Code 能力体现 |
 |------|----------|---------------------|
 | 需求理解 | 问题去重的渐进式澄清 | 从模糊反馈中提取技术需求，多轮迭代 |
-| 架构设计 | BFS 依赖图追踪方案 | 设计跨层数据流，而非简单正则匹配 |
-| 编码实现 | Token-based 语法高亮 | 借鉴编译原理解决正则冲突 |
+| 架构设计 | BFS 依赖图 + squarified treemap | 设计跨层数据流 + 纯算法实现可视化 |
+| 编码实现 | Token-based 语法高亮 + 趋势图 | 借鉴编译原理 + recharts 多维折线 |
 | Code Review | 四层根因排查接口关联 | 逐层深入，覆盖 Java DI 各种模式 |
 | 测试验证 | 编译→重启→端口验证闭环 | 每次改动都确保可运行交付 |
 | 安全 | XSS 防护 + 路径穿越防护 | 先转义再处理，安全意识前置 |
 | 版本管理 | 从 git init 到 GitHub 推送 | 工具安装、网络异常、引导用户协作 |
 | CLAUDE.md | 项目开发手册 | AI 结对编程的规范约束 |
 | 协作分工 | Task Agent 并行处理 | 任务拆分 + 并行执行 + 统一验收 |
-| Plan Mode | 先设计后编码 | 避免跨层修改的返工风险 |
+| Plan Mode | 趋势图 + 热力图规划 | 先明确数据流再编码，避免返工 |

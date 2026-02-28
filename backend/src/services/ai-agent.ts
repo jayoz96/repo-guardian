@@ -415,6 +415,13 @@ function generateSummary(result: AnalysisResult): string {
     '',
     `🔍 最薄弱环节：${DIMENSION_LABELS[weakest]}（${result[weakest].score} 分）`,
     `💡 建议优先处理${DIMENSION_LABELS[weakest]}相关问题以提升整体代码健康度。`,
+    '',
+    `📐 五维评分标准：`,
+    `  · 安全性：基于 Semgrep 扫描，检测注入、XSS、硬编码密码等漏洞，每个 error 扣 8 分，warning 扣 3 分`,
+    `  · 代码质量：检测未使用代码、空 catch、魔法数字等，每个 error 扣 5 分，warning 扣 2 分`,
+    `  · 复杂度：计算函数圈复杂度，>15 为高风险（扣 8 分/个），>10 为中风险（扣 3 分/个）`,
+    `  · 可维护性：评估文件行数（>300 行扣分）和代码块长度（>50 行扣分），反映长期维护成本`,
+    `  · 规范性：检查命名规范、缩进风格、import 规则等一致性，每项违规扣 1-3 分`,
   );
 
   return parts.join('\n');
